@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import 'node_modules/modern-normalize/modern-normalize.css';
+
+
+body{
+    background-color: whitesmoke;
+}
+.outerPanel{
+    background-color: rgb(205, 205, 205)
+}
