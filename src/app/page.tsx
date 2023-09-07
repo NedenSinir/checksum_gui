@@ -4,6 +4,7 @@ import { Link } from '@chakra-ui/next-js'
 import { Tabs, TabList, Tab, TabPanels, TabPanel, Center, TabIndicator, Heading } from '@chakra-ui/react'
 import PreClassTab from '../components/PreClassTab'
 import PrimitivizationTab from '@/components/PrimitivizationTab'
+import ReversionTab from '@/components/ReversionTab'
 
 export default function Page() {
   return (
@@ -28,7 +29,7 @@ export default function Page() {
         <PrimitivizationTab></PrimitivizationTab>
       </TabPanel>
       <TabPanel>
-        <p>three!</p>
+        <ReversionTab></ReversionTab>
       </TabPanel>
     </TabPanels>
   </Tabs>

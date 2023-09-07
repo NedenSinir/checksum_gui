@@ -1,8 +1,10 @@
+
+import { useEffect } from 'react'
 import { invoke } from '@tauri-apps/api/tauri'
 
 export default async function Demo() {
   console.log("naber oldu");
-     invoke<string>('generate_apc')
+     invoke<string>('demo')
       .then(console.log)
       .catch(console.error)
 

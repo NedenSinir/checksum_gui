@@ -4,33 +4,31 @@ import { Field, Form, Formik } from 'formik';
 import openFile from '@/utils/openFile';
 import primitivize_to_alpr from '@/api/primitivize_to_alpr';
 import Demo from '@/api/demo';
+import revert_from_alpr from '@/api/revert_from_alpr';
 
-const PrimitivizationTab = () => {
+const ReversionTab = () => {
 
 const [selectedFile ,setSelectedFile] = useState("")
 
     const handleOpenFile = async () =>{
-        const filePath = await openFile(["txt"])
+        const filePath = await openFile(["alpr"])
         setSelectedFile(filePath)        
     }
-    const handlePrimitivizeToAlpr = async () =>{
+    const handleRevertFromAlpr = async () =>{
         if(!selectedFile) return
         console.log(selectedFile);
         
-        primitivize_to_alpr(selectedFile)     
+        revert_from_alpr(selectedFile)     
     }
   return (
     <VStack>
 
             <Button mt={4} onClick={handleOpenFile}  variant="outline" colorScheme="blue">
-              Open File
+              Select File
             </Button>
             <Text>Selected File : {selectedFile}</Text>
-            <Button mt={4} onClick={handlePrimitivizeToAlpr} variant="outline" colorScheme="blue">
-              Primitivize
-            </Button>
-            <Button mt={4} onClick={Demo} variant="outline" colorScheme="blue">
-              Demo
+            <Button mt={4} onClick={handleRevertFromAlpr} variant="outline" colorScheme="blue">
+              Revert alpr file
             </Button>
       
 
@@ -38,4 +36,4 @@ const [selectedFile ,setSelectedFile] = useState("")
   );
 };
 
-export default PrimitivizationTab;
+export default ReversionTab;

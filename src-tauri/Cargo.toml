@@ -22,7 +22,8 @@ serde_derive = "1.0"
 brotli = "3.3.0"
 ring = "0.16.20"
 crc32fast = "1.2"
-
+rayon = "1.7.0"
+itertools = "0.10.0"
 
 
 [features]

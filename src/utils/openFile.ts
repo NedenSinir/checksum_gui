@@ -1,12 +1,12 @@
 import { open } from '@tauri-apps/api/dialog';  
 import { appDataDir, appDir } from '@tauri-apps/api/path';
 
-export default async function openFile() {
+export default async function openFile(allowedExtension:string[]) {
   const selected = await open({
     multiple: false,
     filters: [{
-      name: 'Text',
-      extensions: ['txt']
+      name: 'Default',
+      extensions: allowedExtension
     }]
   });
   if (Array.isArray(selected)) {

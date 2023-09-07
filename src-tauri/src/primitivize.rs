@@ -4,8 +4,8 @@ use crate::generate_classes::PredefinedClass;
 #[derive(Debug, Clone)]
 pub struct LayerData {
     pub location: u64,
-    pub layer_number: u64,
-    pub data: [u8;14],
+    pub layer_number: u32,
+    pub data: Vec<u8>,
 }
 
 fn divide_into_sections(number: u32, step_amount: f32, target_number: u32) -> u32 {
@@ -80,12 +80,10 @@ pub fn find_apc_class(layer_data:&[u8],apc_hashmap:&HashMap<[u8;2],PredefinedCla
         //members:[].to_vec()//doesn't count for partial eq
     };
 
-    let start = Instant::now();
     
-    let selected_class: &PredefinedClass  = & apc_hashmap.values().filter(|x: &&PredefinedClass| *x == &current_object).cloned().collect::<Vec<PredefinedClass>>()[0];
-    
-    let elapsed = start.elapsed();
-    println!("Elapsed time: {:?}", elapsed);
+    let selected_class: &PredefinedClass = apc_hashmap.values().find(|&x| *x == current_object).unwrap();
+
+
     
 
     let values: Vec<&str> = selected_class.id.split(',').collect();
@@ -101,22 +99,23 @@ pub fn find_apc_class(layer_data:&[u8],apc_hashmap:&HashMap<[u8;2],PredefinedCla
 
 
 
-pub fn primitivize_layer(data_to_be_primitivized:&[u8],apc_hashmap:&HashMap<[u8;2],PredefinedClass>,curr_location:u64,curr_layer_number:u64)->LayerData{
+pub fn primitivize_layer(data_to_be_primitivized:&[u8],apc_hashmap:&HashMap<[u8;2],PredefinedClass>,curr_location:u64,curr_layer_number:u32)->LayerData{
     
     let data = data_to_be_primitivized;//15 u8
+    if data.len() != 15 {
+       return  LayerData { location: curr_location, layer_number: curr_layer_number, data: data.to_vec() }
+    }
     let mut id_vec = Vec::<u8>::new();
-    let main_checksum = crc32fast::hash(&data).to_be_bytes();
+    let main_checksum = crc32fast::hash(&data).to_be_bytes().to_vec();
     
-    for chunk_3 in data.chunks(3){
+    for chunk_3 in data.chunks(3){ //can be parallelized but no diff inspected on tests
         let current_class_id = find_apc_class(chunk_3, apc_hashmap);
         
         
         id_vec.extend_from_slice(&current_class_id);
     
     }
-    let mut final_data: [u8; 14] = [0; 14];
-    final_data[..4].copy_from_slice(&main_checksum);
-    final_data[4..].copy_from_slice(&id_vec[..10]);
-    LayerData { location: curr_location, layer_number: curr_layer_number, data: final_data }
+    id_vec.extend(main_checksum);
+    LayerData { location: curr_location, layer_number: curr_layer_number, data: id_vec }
 
 }
