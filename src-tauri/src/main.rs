@@ -4,7 +4,7 @@
 use std::{fs::{File, self}, vec, time::Instant, sync::{Arc, Mutex,RwLock}};
 use std::io::{self, Write};
 
-use app::{compress::{compress_apc, decompress_apc, compress_layer_data}, generate_classes::generate, primitivize::{primitivize_layer, LayerData}, revert::revert_layer};
+use app::{compress::{compress_apc, decompress_apc, compress_layer_data}, generate_classes_new::generate, primitivize::{primitivize_layer, LayerData}, revert::revert_layer};
 use rayon::{prelude::{IntoParallelRefIterator, ParallelIterator}, slice::ParallelSlice};
 use tauri::{Env, Context, Assets};
 use ring::digest;
@@ -66,30 +66,67 @@ fn decompress_from_apc() {
 
 #[tauri::command]
 fn demo() {
-    fn parallel_sum(numbers: &Vec<u64>) -> u64 {
-        // Use Rayon's parallel processing to calculate the sum in parallel
-        let sum = numbers.par_iter().map(|&x| x).sum();
-        
-        sum
-    }
-    let numbers: Vec<u64> = (1..=10000000).collect();
-    fn non_parallel_sum(numbers: &Vec<u64>) -> u64 {
-        let sum = numbers.iter().cloned().sum();
-        
-        sum
-    }
-    // Calculate the sum of numbers in parallel using Rayon
-    // Calculate the sum of numbers in a non-parallelized way
-    let start_time = Instant::now();
-    let parallel_sum: u64 = parallel_sum(&numbers);
-    let duration = start_time.elapsed();
-    println!("Parallelized sum: {} (Time elapsed: {:?}", parallel_sum, duration);
 
-    let start_time = Instant::now();
-    let sum: u64 = non_parallel_sum(&numbers);
-    let duration = start_time.elapsed();
-    println!("Non-parallelized sum: {} (Time elapsed: {:?}", sum, duration);
+    fn linear_interpolation(data: &str, new_length: usize) -> String {
+        let data_len = data.len();
+        
+        // Check if the new length is less than or equal to the current length
+        if new_length <= data_len {
+            return data[..new_length].to_string(); // Truncate to the desired length
+        }
+        
+        // Initialize an empty string for the result
+        let mut result = String::new();
+        
+        // Calculate the step size for interpolation
+        let step = (data_len - 1) as f64 / (new_length - 1) as f64;
+        
+        // Perform linear interpolation
+        for i in 0..new_length {
+            let index = (i as f64 * step).round() as usize;
+            let interpolated_char = data.chars().nth(index).unwrap();
+            result.push(interpolated_char);
+        }
+        
+        result
+    }
 
+    fn reverse_linear_interpolation(data: &str, original_length: usize) -> String {
+        let data_len = data.len();
+        
+        // Check if the original length is greater than or equal to the current length
+        if original_length >= data_len {
+            return data.to_string(); // Return the data as is
+        }
+        
+        // Initialize an empty string for the result
+        let mut result = String::new();
+        
+        // Calculate the step size for reverse interpolation
+        let step = (data_len - 1) as f64 / (original_length - 1) as f64;
+        
+        // Perform reverse linear interpolation
+        for i in 0..original_length {
+            let index = (i as f64 * step).round() as usize;
+            let char_at_index = data.chars().nth(index).unwrap();
+            result.push(char_at_index);
+        }
+        
+        result
+    }
+
+    let original_data = "010101010100101111001010";
+    let new_length = 16;
+    let interpolated_data = linear_interpolation(original_data, new_length);
+    
+    println!("{}", interpolated_data);
+
+    let original_length = 24;
+    let reversed_data = reverse_linear_interpolation(&interpolated_data, original_length);
+    
+    println!("{}", reversed_data);
+
+    
     
 }
 

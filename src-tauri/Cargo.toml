@@ -24,7 +24,8 @@ ring = "0.16.20"
 crc32fast = "1.2"
 rayon = "1.7.0"
 itertools = "0.10.0"
-
+adler32 = "1.2.0"
+primal = "0.3.2"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

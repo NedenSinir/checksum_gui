@@ -14,11 +14,11 @@
 
 # production
 /build
-
+/classes/*
 # misc
 .DS_Store
 *.pem
-
+*.alpr
 # debug
 npm-debug.log*
 yarn-debug.log*

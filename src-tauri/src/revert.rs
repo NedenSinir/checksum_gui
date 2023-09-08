@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 use std::time::Instant;
 
+use crate::{generate_classes_new::PredefinedClass, primitivize::LayerData};
 use itertools::Itertools;
-use rayon::{slice::ParallelSlice, prelude::ParallelIterator};
+use primal::is_prime;
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelRefIterator;
-use crate::{primitivize::LayerData, generate_classes::PredefinedClass};
+use rayon::prelude::IntoParallelIterator;
+use rayon::{prelude::ParallelIterator, slice::ParallelSlice};
+use std::iter::FlatMap;
 fn generate_permutations(tuples: Vec<(u32, u32, u32)>) -> Vec<(u8, u8, u8)> {
     let mut result = Vec::new();
 
@@ -24,34 +27,76 @@ fn generate_permutations(tuples: Vec<(u32, u32, u32)>) -> Vec<(u8, u8, u8)> {
     result
 }
 
-
-fn find_apc_possibilites(class_id:&[u8],apc_hashmap:&HashMap<[u8;2],PredefinedClass>)->Vec<(u8,u8,u8)>{
-
+fn find_apc_possibilites(
+    class_id: &[u8],
+    apc_hashmap: &HashMap<[u8; 2], PredefinedClass>,
+) -> Vec<(u8, u8, u8)> {
     let selected_class = apc_hashmap.get(class_id).unwrap();
-
-    let big_number = selected_class.big_section*5 - (5 - selected_class.big_small_degree[0] as u32);
-    let small_number = selected_class.small_section*5 - (5- selected_class.big_small_degree[1] as u32);
-    let is_other_pair =  selected_class.other_degre == 1;
-
-
-    // Generate all valid integer values for other_number
-    let mut possible_other_numbers = Vec::new();
-    for num in small_number..=big_number {
-        if is_other_pair && num % 2 == 0 {
-            possible_other_numbers.push(num);
-        } else if !is_other_pair && num%2 !=0  {
-            possible_other_numbers.push(num);
-        }
-    };
-    let final_vec:Vec<(u32,u32,u32)> = possible_other_numbers.iter().map(|x|{
-        (big_number,x.clone(),small_number)
-    }).collect();
-    println!("{:?} <-- combinations",final_vec.len());
-    generate_permutations(final_vec)
+    let prime_bool = selected_class.is_prime;
+    let ones = selected_class.ones;
+    let binary_length_class = selected_class.binary_length[0];
+    let two_amount_class = selected_class.two_amount[0];
+    println!("{:?}",selected_class);
+    let mut final_vec = Vec::<(u8,u8,u8)>::new();
+    for i in 0..=255 {
+        let mut two_amount = 0;
+        let mut binary_length = 0;
+        let binary_i = format!("{:b}", i);
+        binary_length += binary_i.len();
+        if binary_length > binary_length_class { continue; }
     
-
+        if i % 2 == 0 {
+            two_amount += 1;
+        }
+        if two_amount > two_amount_class { continue; }
+        if binary_i.matches("1").count() != ones[0] {
+            continue;
+        }
+        if prime_bool[0] != is_prime(i) {
+            continue;
+        }
+    
+        for j in 0..=255 {
+            let  binary_j = format!("{:b}", j);
+            let mut two_amount_j = two_amount; // Reset two_amount for j
+            let mut binary_length_j = binary_length; // Reset binary_length for j
+    
+            binary_length_j += binary_j.len();
+            if binary_length_j > binary_length_class { continue; }
+    
+            if j % 2 == 0 {
+                two_amount_j += 1;
+            }
+            if two_amount_j > two_amount_class { continue; }
+            if binary_j.matches("1").count() != ones[1] {
+                continue;
+            }
+            if prime_bool[1] != is_prime(j) {
+                continue;
+            }
+    
+            for k in 0..=255 {
+                let binary_k = format!("{:b}", k);
+                let mut two_amount_k = two_amount_j; // Reset two_amount for k
+                let mut binary_length_k = binary_length_j; // Reset binary_length for k
+    
+                binary_length_k += binary_k.len();
+                if binary_length_k != binary_length_class { continue; }
+                if k % 2 == 0 {
+                    two_amount_k += 1;
+                }
+                if two_amount_k != two_amount_class { continue; }
+    
+                if prime_bool[2] != is_prime(k) {
+                    continue;
+                }
+                final_vec.push((i as u8, j as u8, k as u8));
+            }
+        }
+    }
+    return  final_vec;
+    
 }
-
 
 fn find_combinations(
     possible_combinations: &Vec<Vec<(u8, u8, u8)>>,
@@ -66,7 +111,12 @@ fn find_combinations(
             let mut current_data = [0; 15];
 
             // Use your existing recursive function or logic here
-            generate_combinations_recursive(possible_combination, 0, &mut current_data, &mut local_solutions);
+            generate_combinations_recursive(
+                possible_combination,
+                0,
+                &mut current_data,
+                &mut local_solutions,
+            );
 
             local_solutions
         })
@@ -95,74 +145,78 @@ fn generate_combinations_recursive(
             current_data[index * 3] = *a;
             current_data[index * 3 + 1] = *b;
             current_data[index * 3 + 2] = *c;
-            generate_combinations_recursive(possible_combination, index + 1, current_data, solutions);
+            generate_combinations_recursive(
+                possible_combination,
+                index + 1,
+                current_data,
+                solutions,
+            );
         }
     }
 }
-pub fn revert_layer(data_to_be_reverted:&[u8],apc_hashmap:&HashMap<[u8;2],PredefinedClass>,curr_location:u64,curr_layer_number:u32)->LayerData{
-
+pub fn revert_layer(
+    data_to_be_reverted: &[u8],
+    apc_hashmap: &HashMap<[u8; 2], PredefinedClass>,
+    curr_location: u64,
+    curr_layer_number: u32,
+) -> LayerData {
     if data_to_be_reverted.len() != 14 {
-       return  LayerData { location: curr_location, layer_number: curr_layer_number, data: data_to_be_reverted.to_vec() }
+        return LayerData {
+            location: curr_location,
+            layer_number: curr_layer_number,
+            data: data_to_be_reverted.to_vec(),
+        };
     }
     let mut id_vec = Vec::<u8>::new();
     let (data, curr_checksum) = data_to_be_reverted.split_at(data_to_be_reverted.len() - 4);
-    
-    println!("{:?} <-- data",data);
-    let possible_combinations:Vec<Vec<(u8,u8,u8)>> = data.par_chunks(2).map(|chunk_2|{
 
-        return find_apc_possibilites(chunk_2, apc_hashmap)
+    println!("{:?} <-- data", data);
+    let possible_combinations: Vec<Vec<(u8, u8, u8)>> = data
+        .par_chunks(2)
+        .map(|chunk_2| return find_apc_possibilites(chunk_2, apc_hashmap))
+        .collect();
 
-    }).collect();
+    println!("{:?} <-- len", possible_combinations[0].len());
+    println!("{:?} <-- len", possible_combinations[1].len());
+    println!("{:?} <-- len", possible_combinations[2].len());
+    println!("{:?} <-- len", possible_combinations[3].len());
+    println!("{:?} <-- len", possible_combinations[4].len());
 
-    println!("{:?} <-- len",possible_combinations[0].len());
-    println!("{:?} <-- len",possible_combinations[1].len());
-    println!("{:?} <-- len",possible_combinations[2].len());
-    println!("{:?} <-- len",possible_combinations[3].len());
-    println!("{:?} <-- len",possible_combinations[4].len());
-
-    let mut index = 0;
-    let mut solutions = Vec::new();
     let start = Instant::now();
 
-    
-    for i in possible_combinations[0].iter() {
-        for j in possible_combinations[1].iter() {
-            for k in possible_combinations[2].iter() {
-                for l in possible_combinations[3].iter() {
-                    for m in possible_combinations[4].iter() {
-                        
+    let solutions: Vec<[u8; 15]> = possible_combinations[0]
+        .par_iter()
+        .flat_map(|i| {
+            possible_combinations[1].par_iter().flat_map(|j| {
+                possible_combinations[2].par_iter().flat_map(|k| {
+                    possible_combinations[3].par_iter().flat_map(|l| {
+                        possible_combinations[4].par_iter().flat_map(|m| {
+                            let current_data = [
+                                i.0, i.1, i.2, j.0, j.1, j.2, k.0, k.1, k.2, l.0, l.1, l.2, m.0,
+                                m.1, m.2,
+                            ];
 
+                            let current_checksum = crc32fast::hash(&current_data).to_be_bytes();
 
+                            if current_checksum.to_vec() == curr_checksum {
+                                return Some(current_data);
+                            } else {
+                                return None;
+                            }
+                        })
+                    })
+                })
+            })
+        })
+        .collect();
 
-                        let current_data = &[
-                            i.0 as u8, i.1 as u8, i.2 as u8, j.0 as u8, j.1 as u8, j.2 as u8,
-                            k.0 as u8, k.1 as u8, k.2 as u8, l.0 as u8,l.1 as u8, l.2 as u8, m.0 as u8,m.1 as u8, m.2 as u8
-                        ];
-                        index+=1;
-                        let current_checksum = crc32fast::hash(current_data).to_be_bytes();
-                        if current_checksum.to_vec() == curr_checksum {
+    println!("{:?} <-- time taken", start.elapsed());
 
-                            solutions.push(*current_data);
-                            
-                        }
-                    }
-                }
-            }
-        }
+    println!("{:?}", solutions);
+
+    LayerData {
+        location: curr_location,
+        layer_number: curr_layer_number,
+        data: solutions[0].to_vec(),
     }
-    
-    println!("{:?} <-- time taken",start.elapsed());
-    // At this point, 'solutions' contains the valid combinations found in parallel
-    for solution in solutions.iter() {
-        println!("{:?},<-- found", solution);
-    }
-
-
-    LayerData { location: curr_location, layer_number: curr_layer_number, data: solutions[0].to_vec() }
-
-
-
 }
-
-
-

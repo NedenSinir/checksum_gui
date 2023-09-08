@@ -82,8 +82,8 @@
         
     
         for i in 0..=range {
-            for j in (i)..=range {
-                for k in (j)..=range {
+            for j in 0..=range {
+                for k in 0..=range {
                         
 
                  

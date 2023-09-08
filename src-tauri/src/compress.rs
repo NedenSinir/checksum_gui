@@ -4,7 +4,7 @@ use std::{io::Write, fs::File, collections::HashMap};
 use brotli::Decompressor;
 use std::io::Read;
 
-use crate::generate_classes::PredefinedClass;
+use crate::generate_classes_new::PredefinedClass;
 
 
 //use crate::{structs::hex::HexString};

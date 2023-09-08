@@ -1,6 +1,8 @@
 use std::{collections::HashMap, borrow::BorrowMut, vec, time::Instant};
 
-use crate::generate_classes::PredefinedClass;
+use primal::is_prime;
+
+use crate::generate_classes_new::PredefinedClass;
 #[derive(Debug, Clone)]
 pub struct LayerData {
     pub location: u64,
@@ -33,50 +35,24 @@ pub fn find_apc_class(layer_data:&[u8],apc_hashmap:&HashMap<[u8;2],PredefinedCla
     let i = &layer_data_slice[0];
     let j = &layer_data_slice[1];
     let k = &layer_data_slice[2];
-    let biggest_num = if i >= j && i >= k {
-        i.clone() as u32
-    } else if j >= i && j >= k {
-        j.clone() as u32
-    } else {
-        k.clone() as u32
-    };
-    
-    let smallest_num = if i <= j && i <= k {
-        i.clone() as u32
-    } else if j <= i && j <= k {
-        j.clone() as u32
-    } else {
-        k.clone() as u32
-    };
-    let sum: u32 = biggest_num + smallest_num ;
-    let other = (*i as u32 +*j as u32 +*k as u32)- sum;
-    let mut index =0;
-    let biggest_num_section = divide_into_sections(255, 51.0, biggest_num);
-    let smallest_num_section = divide_into_sections(255, 51.0, smallest_num);
-    let mut numbers_degree:[u8;2] = [0,0];
-    let mut other_degre = 0;
-    
-    if other%2==0{
-        other_degre=1
-    }
-    
-    
-    [biggest_num,smallest_num].iter().for_each(|x|{
-
-            numbers_degree[index] = (x % 5).try_into().unwrap() ;
-              
-        
-                index+=1
+    let is_div_by_two = [i%2==0,j%2==0,k%2==0];
+    let prime_bool = [is_prime((*i).into()),is_prime((*j).into()),is_prime((*k).into())];
+    let mut prime_amount = [0];
+    let mut two_amount = [0];
+    let ones = [format!("{:b}", i).matches("1").count() , format!("{:b}", j).matches("1").count() ,format!("{:b}", k).matches("1").count()];
+    let binary_length = [format!("{:b}", i).len()  + format!("{:b}", j).len() + format!("{:b}", k).len()];
+    is_div_by_two.iter().for_each(|x|{
+        if *x{
+            two_amount[0]+=1
+        }
     });
-
     let current_object = PredefinedClass {
         id: "".to_string(), //doesn't count for partial eq
-        sum_big_small:sum,
         amount: 1,//doesn't count for partial eq
-        big_section:biggest_num_section,
-        small_section:smallest_num_section,
-        big_small_degree :numbers_degree,
-        other_degre:other_degre,
+        binary_length,
+        ones,
+        is_prime:prime_bool,
+        two_amount
         //members:[].to_vec()//doesn't count for partial eq
     };
 
