@@ -6,6 +6,7 @@
     use serde::de::Error;
     use serde_derive::Serialize;
     use serde_derive::Deserialize;
+    use serde_json::Number;
     use tauri::api::path::{BaseDirectory, resolve_path};
     use tauri::{Config, PackageInfo, Env};
 
@@ -51,7 +52,6 @@
         }
     }
     impl Eq for PredefinedClass {}
-
     fn write_objects_to_file(objects: &HashMap<String, PredefinedClass>, file_path: &str) -> std::io::Result<()> {
 
         let mut file = File::create(file_path)?;
@@ -98,8 +98,6 @@
         let mut result: HashMap<String, PredefinedClass> = HashMap::new();
         let mut index1:u32 = 0;
         let mut index2:u32 = 0;
-        
-    
         for i in 0..=range {
             for j in 0..=range {
                 for k in 0..=range {
@@ -212,7 +210,7 @@
                                 if index1 > range{
                                     panic!("{} <-- noluyo aga",index1)
                                 }
-                                let id = format!("{},{}", index1, index2);
+                                let id = format!("{},{}",index1,index2);
                                 let mut new_object = current_object.clone();
                                 
                                 //new_object.members.push([i,j,k]);

@@ -1,10 +1,10 @@
 use brotli::{CompressorWriter, enc::BrotliEncoderParams, CompressorReader};
 use serde_derive::{Serialize, Deserialize};
-use std::{io::Write, fs::File, collections::HashMap};
+use std::{io::{Write, self, BufRead}, fs::File, collections::HashMap};
 use brotli::Decompressor;
 use std::io::Read;
 
-use crate::generate_classes_new::PredefinedClass;
+use crate::generate_enum_combinatorics::{PredefinedClass, IdentifierClass};
 
 
 //use crate::{structs::hex::HexString};
@@ -92,4 +92,20 @@ pub fn compress_layer_data(data:Vec<u8>)->Vec<u8>{
     }
     println!("{} <-original and {} <- compressed",data.len(),compressed_data.len());
  compressed_data   
+}
+
+pub fn read_identifiers_from_file(file_path: &str) -> io::Result<HashMap<[u8; 6], String>> {
+    let mut identifier_map: HashMap<[u8; 6], String> = HashMap::new();
+
+    let file = File::open(file_path)?;
+    let reader = io::BufReader::new(file);
+
+    for line in reader.lines() {
+        let line = line?;
+        let identifier: IdentifierClass = serde_json::from_str(&line)?;
+
+        identifier_map.insert(identifier.pattern, identifier.id);
+    }
+
+    Ok(identifier_map)
 }

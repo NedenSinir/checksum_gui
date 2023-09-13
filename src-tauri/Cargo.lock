@@ -75,6 +75,7 @@ dependencies = [
  "adler32",
  "brotli",
  "crc32fast",
+ "hex",
  "itertools",
  "primal",
  "rayon",

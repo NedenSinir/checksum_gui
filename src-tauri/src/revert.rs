@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::time::Instant;
 
-use crate::{generate_classes_new::PredefinedClass, primitivize::LayerData};
+use crate::{generate_enum_combinatorics::PredefinedClass, primitivize::LayerData};
 use itertools::Itertools;
 use primal::is_prime;
 use rayon::iter::IndexedParallelIterator;
@@ -32,70 +32,56 @@ fn find_apc_possibilites(
     apc_hashmap: &HashMap<[u8; 2], PredefinedClass>,
 ) -> Vec<(u8, u8, u8)> {
     let selected_class = apc_hashmap.get(class_id).unwrap();
-    let prime_bool = selected_class.is_prime;
-    let ones = selected_class.ones;
     let binary_length_class = selected_class.binary_length[0];
-    let two_amount_class = selected_class.two_amount[0];
-    println!("{:?}",selected_class);
-    let mut final_vec = Vec::<(u8,u8,u8)>::new();
+    let div_by_two = selected_class.is_div_by_two;
+    println!("{:?}", selected_class);
+    let mut final_vec = Vec::<(u8, u8, u8)>::new();
     for i in 0..=255 {
-        let mut two_amount = 0;
+        let mut one_amount = 0;
         let mut binary_length = 0;
         let binary_i = format!("{:b}", i);
         binary_length += binary_i.len();
-        if binary_length > binary_length_class { continue; }
-    
-        if i % 2 == 0 {
-            two_amount += 1;
-        }
-        if two_amount > two_amount_class { continue; }
-        if binary_i.matches("1").count() != ones[0] {
+        if binary_length > binary_length_class {
             continue;
         }
-        if prime_bool[0] != is_prime(i) {
+
+        if (i % 2 == 0) != div_by_two[0] {
             continue;
         }
-    
+
         for j in 0..=255 {
-            let  binary_j = format!("{:b}", j);
-            let mut two_amount_j = two_amount; // Reset two_amount for j
+            let binary_j = format!("{:b}", j);
+            let mut one_amount_j = one_amount; // Reset two_amount for j
             let mut binary_length_j = binary_length; // Reset binary_length for j
-    
-            binary_length_j += binary_j.len();
-            if binary_length_j > binary_length_class { continue; }
-    
-            if j % 2 == 0 {
-                two_amount_j += 1;
-            }
-            if two_amount_j > two_amount_class { continue; }
-            if binary_j.matches("1").count() != ones[1] {
+
+            binary_length += binary_j.len();
+            if binary_length_j > binary_length_class {
                 continue;
             }
-            if prime_bool[1] != is_prime(j) {
+
+            if (j % 2 == 0) != div_by_two[1] {
                 continue;
             }
-    
+
             for k in 0..=255 {
                 let binary_k = format!("{:b}", k);
-                let mut two_amount_k = two_amount_j; // Reset two_amount for k
+                let mut one_amount_k = one_amount_j; // Reset two_amount for k
                 let mut binary_length_k = binary_length_j; // Reset binary_length for k
-    
-                binary_length_k += binary_k.len();
-                if binary_length_k != binary_length_class { continue; }
-                if k % 2 == 0 {
-                    two_amount_k += 1;
-                }
-                if two_amount_k != two_amount_class { continue; }
-    
-                if prime_bool[2] != is_prime(k) {
+
+                binary_length += binary_k.len();
+                if binary_length_k > binary_length_class {
                     continue;
                 }
+
+                if (j % 2 == 0) != div_by_two[2] {
+                    continue;
+                }
+
                 final_vec.push((i as u8, j as u8, k as u8));
             }
         }
     }
-    return  final_vec;
-    
+    return final_vec;
 }
 
 fn find_combinations(
